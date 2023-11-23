@@ -42,12 +42,16 @@ struct Elf32 : public ElfTypes
 
         // Predicated types
         typedef Word Word32_Xword64;
+        typedef Sword S_Word32_Xword64;
 
         template<typename t32, typename t64>
         struct pick
         {
                 typedef t32 t;
         };
+
+        static const uint32_t R_SYM_SHIFT = 8;
+        static const uint32_t R_TYPE_MASK = 0xff;
 };
 
 struct Elf64 : ElfTypes
@@ -63,12 +67,16 @@ struct Elf64 : ElfTypes
 
         // Predicated types
         typedef Xword Word32_Xword64;
+        typedef Sxword S_Word32_Xword64;
 
         template<typename t32, typename t64>
         struct pick
         {
                 typedef t64 t;
         };
+		
+        static const uint32_t R_SYM_SHIFT = 32;
+        static const uint32_t R_TYPE_MASK = 0xffffffffL;
 };
 
 // Data encodings (ELF64 table 4)
@@ -270,6 +278,37 @@ static inline shf& operator^=(shf &a, shf b)
         return a;
 }
 
+// Relocation Entry
+template<typename E = Elf64, byte_order Order = byte_order::native>
+struct Elf_Rel
+{
+	typedef E types;
+	static const byte_order order = Order;
+
+	typename E::Off offset; // Offset from beginning of
+	// corresponding section to apply
+	typename E::Word32_Xword64 info;   // This member gives both the symbol
+	// table index with respect to which
+	// the relocation must be made and the
+	// type of relocation to apply.
+	// Relocation types are
+	// processor-specific.
+
+	inline uint32_t R_SYM_SHIFT() const { return E::R_SYM_SHIFT; }
+
+	inline uint32_t R_TYPE_MASK() const { return E::R_TYPE_MASK; }
+};
+
+// Relocation Entry with addend
+template<typename E = Elf64, byte_order Order = byte_order::native>
+struct Elf_Rela : public Elf_Rel<E, Order>
+{
+	// Specifies a constant addend used to compute the value to be
+	// to compute the value to be
+	// stored into the relocatable field.
+	typename E::S_Word32_Xword64 addend;
+};
+	
 // Section header (ELF32 figure 1-8, ELF64 figure 3)
 template<typename E = Elf64, byte_order Order = byte_order::native>
 struct Shdr

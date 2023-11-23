@@ -5,6 +5,8 @@
 #include "elf++.hh"
 
 #include <cstring>
+#include <sstream>
+#include <stdexcept>
 
 using namespace std;
 
@@ -161,6 +163,14 @@ elf::get_segment(unsigned index) const
         return segments().at(index);
 }
 
+size_t elf::get_symtab_entry_size() const {
+	if (get_hdr().ei_class == elfclass::_32)
+		return sizeof(Sym<Elf32>);
+	else
+		return sizeof(Sym<Elf64>);
+}
+
+
 //////////////////////////////////////////////////////////////////
 // class segment
 //
@@ -293,6 +303,41 @@ section::as_symtab() const
                       m->f.get_section(get_hdr().link).as_strtab());
 }
 
+std::vector<rel>
+section::get_rels() const {
+	if (m->hdr.type != sht::rel) {
+		throw section_type_mismatch("section not a REL type");
+	}
+
+	std::vector<rel> result;
+	uintptr_t curr = (uintptr_t) data();
+	uintptr_t end = (uintptr_t) ((uintptr_t) data() + size());
+	while (curr < end) {
+		rel rel_entry((void *) curr);
+		result.emplace_back(rel_entry);
+		curr += rel_entry.size();
+	}
+
+	return result;
+}
+
+std::vector<rela>
+section::get_relas() const {
+	if (m->hdr.type != sht::rela) {
+		throw section_type_mismatch("section not a RELA type");
+	}
+
+	std::vector<rela> result;
+	uintptr_t curr = (uintptr_t) data();
+	uintptr_t end = (uintptr_t) ((uintptr_t) data() + size());
+	while (curr < end) {
+		rela rela_entry((void *) curr);
+		result.emplace_back(rela_entry);
+		curr += rela_entry.size();
+	}
+	return result;
+}
+
 //////////////////////////////////////////////////////////////////
 // class strtab
 //
@@ -360,6 +405,32 @@ sym::get_name() const
 }
 
 //////////////////////////////////////////////////////////////////
+// class rela
+//
+rela::rela(void *d) :
+		data()
+{
+	std::memcpy(&data.offset, d, sizeof(data.offset));
+	std::memcpy(&data.info, (void *) ((char *) d + sizeof(data.offset)),
+				sizeof(data.info));
+	std::memcpy(&data.addend, (void *) ((char *) d + sizeof(data.offset) +
+										sizeof(data.info)),
+				sizeof(data.addend));
+}
+
+//////////////////////////////////////////////////////////////////
+// class rel
+//
+
+rel::rel(void *d) :
+		data()
+{
+	std::memcpy(&data.offset, d, sizeof(data.offset));
+	std::memcpy(&data.info, (void *) ((char *) d + sizeof(data.offset)),
+				sizeof(data.info));
+}
+
+//////////////////////////////////////////////////////////////////
 // class symtab
 //
 
@@ -379,13 +450,23 @@ symtab::symtab(elf f, const void *data, size_t size, strtab strs)
 {
 }
 
+sym symtab::get_sym(unsigned idx) const
+{
+	size_t entry_size = m->f.get_symtab_entry_size();
+
+	if(m->data + idx * entry_size >= m->end) {
+		std::stringstream err;
+		err << "Index " << idx << " out of bounds";
+		throw std::out_of_range(err.str());
+	}
+
+	return sym(m->f, m->data + idx * entry_size, m->strs);
+}
+
 symtab::iterator::iterator(const symtab &tab, const char *pos)
         : f(tab.m->f), strs(tab.m->strs), pos(pos)
 {
-        if (f.get_hdr().ei_class == elfclass::_32)
-                stride = sizeof(Sym<Elf32>);
-        else
-                stride = sizeof(Sym<Elf64>);
+	stride = f.get_symtab_entry_size();
 }
 
 symtab::iterator
