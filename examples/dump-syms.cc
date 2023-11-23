@@ -1,4 +1,4 @@
-#include "elf++.hh"
+#include "../elf/elf++.hh"
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -13,13 +13,13 @@ int main(int argc, char **argv)
                 return 2;
         }
 
-        int fd = open(argv[1], O_RDONLY);
+  /*      int fd = open(argv[1], O_RDONLY);
         if (fd < 0) {
                 fprintf(stderr, "%s: %s\n", argv[1], strerror(errno));
                 return 1;
-        }
+        }*/
 
-        elf::elf f(elf::create_mmap_loader(fd));
+        elf::elf f(elf::create_mmap_loader(argv[1]));
         for (auto &sec : f.sections()) {
                 if (sec.get_hdr().type != elf::sht::symtab && sec.get_hdr().type != elf::sht::dynsym)
                         continue;

@@ -17,7 +17,7 @@ Quick start
 git clone https://github.com/mortbopet/libelfin.git
 git submodule update --init
 cd libelfin && mkdir build && cd build
-cmake ..
+cmake -A Win32 ..
 make -j
 ```
 

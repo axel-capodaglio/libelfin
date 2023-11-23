@@ -1,4 +1,4 @@
-#include "elf++.hh"
+#include "../elf/elf++.hh"
 
 #include <sys/types.h>
 #include <sys/stat.h>

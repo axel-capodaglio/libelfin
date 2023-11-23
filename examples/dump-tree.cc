@@ -1,5 +1,5 @@
-#include "elf++.hh"
-#include "dwarf++.hh"
+#include "../elf/elf++.hh"
+#include "../dwarf/dwarf++.hh"
 
 #include <errno.h>
 #include <fcntl.h>
@@ -29,13 +29,13 @@ main(int argc, char **argv)
                 return 2;
         }
 
-        int fd = open(argv[1], O_RDONLY);
+        /*int fd = open(argv[1], O_RDONLY);
         if (fd < 0) {
                 fprintf(stderr, "%s: %s\n", argv[1], strerror(errno));
                 return 1;
-        }
+        }*/
 
-        elf::elf ef(elf::create_mmap_loader(fd));
+        elf::elf ef(elf::create_mmap_loader(argv[1]));
         dwarf::dwarf dw(dwarf::elf::create_loader(ef));
 
         for (auto cu : dw.compilation_units()) {
