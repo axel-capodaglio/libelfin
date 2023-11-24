@@ -297,6 +297,13 @@ struct Elf_Rel
 	inline uint32_t R_SYM_SHIFT() const { return E::R_SYM_SHIFT; }
 
 	inline uint32_t R_TYPE_MASK() const { return E::R_TYPE_MASK; }
+
+    template<typename E2>
+    void from(const E2& o)
+    {
+        offset = swizzle(o.offset, o.order, order);
+        info = swizzle(o.info, o.order, order);
+    }
 };
 
 // Relocation Entry with addend
@@ -307,6 +314,14 @@ struct Elf_Rela : public Elf_Rel<E, Order>
 	// to compute the value to be
 	// stored into the relocatable field.
 	typename E::S_Word32_Xword64 addend;
+
+    template<typename E2>
+    void from(const E2& o)
+    {
+        this->offset = swizzle(o.offset, o.order, this->order);
+        this->info = swizzle(o.info, o.order, this->order);
+        this->addend = swizzle(o.addend, o.order, this->order);
+    }
 };
 	
 // Section header (ELF32 figure 1-8, ELF64 figure 3)

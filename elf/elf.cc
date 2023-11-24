@@ -309,13 +309,19 @@ section::get_rels() const {
 		throw section_type_mismatch("section not a REL type");
 	}
 
-	std::vector<rel> result;
+    size_t entrySize;
+    if (m->f.get_hdr().ei_class == elfclass::_32)
+        entrySize = sizeof(Elf_Rel<Elf32>);
+    else
+        entrySize = sizeof(Elf_Rel<Elf64>);
+
+    std::vector<rel> result;
 	uintptr_t curr = (uintptr_t) data();
 	uintptr_t end = (uintptr_t) ((uintptr_t) data() + size());
 	while (curr < end) {
-		rel rel_entry((void *) curr);
+		rel rel_entry((void *) curr, m->f);
 		result.emplace_back(rel_entry);
-		curr += rel_entry.size();
+		curr += entrySize;
 	}
 
 	return result;
@@ -327,13 +333,19 @@ section::get_relas() const {
 		throw section_type_mismatch("section not a RELA type");
 	}
 
-	std::vector<rela> result;
+    size_t entrySize;
+    if (m->f.get_hdr().ei_class == elfclass::_32)
+        entrySize = sizeof(Elf_Rela<Elf32>);
+    else
+        entrySize = sizeof(Elf_Rela<Elf64>);
+
+    std::vector<rela> result;
 	uintptr_t curr = (uintptr_t) data();
 	uintptr_t end = (uintptr_t) ((uintptr_t) data() + size());
 	while (curr < end) {
-		rela rela_entry((void *) curr);
+		rela rela_entry((void *) curr, m->f);
 		result.emplace_back(rela_entry);
-		curr += rela_entry.size();
+		curr += entrySize;
 	}
 	return result;
 }
@@ -407,27 +419,42 @@ sym::get_name() const
 //////////////////////////////////////////////////////////////////
 // class rela
 //
-rela::rela(void *d) :
+rela::rela(void *d, const elf& f) :
 		data()
 {
-	std::memcpy(&data.offset, d, sizeof(data.offset));
-	std::memcpy(&data.info, (void *) ((char *) d + sizeof(data.offset)),
-				sizeof(data.info));
-	std::memcpy(&data.addend, (void *) ((char *) d + sizeof(data.offset) +
-										sizeof(data.info)),
-				sizeof(data.addend));
+    canon_hdr(&this->data, d, f.get_hdr().ei_class, f.get_hdr().ei_data);
+
+    if (f.get_hdr().ei_class == elfclass::_32)
+    {
+        sym_idx_ = data.info >> Elf32::R_SYM_SHIFT;
+        rel_type_ = data.info & Elf32::R_TYPE_MASK;
+    }
+    else
+    {
+        sym_idx_ = data.info >> Elf64::R_SYM_SHIFT;
+        rel_type_ = data.info & Elf64::R_TYPE_MASK;
+    }
 }
 
 //////////////////////////////////////////////////////////////////
 // class rel
 //
 
-rel::rel(void *d) :
+rel::rel(void *d, const elf& f) :
 		data()
 {
-	std::memcpy(&data.offset, d, sizeof(data.offset));
-	std::memcpy(&data.info, (void *) ((char *) d + sizeof(data.offset)),
-				sizeof(data.info));
+    canon_hdr(&this->data, d, f.get_hdr().ei_class, f.get_hdr().ei_data);
+
+    if (f.get_hdr().ei_class == elfclass::_32)
+    {
+        sym_idx_ = data.info >> Elf32::R_SYM_SHIFT;
+        rel_type_ = data.info & Elf32::R_TYPE_MASK;
+    }
+    else
+    {
+        sym_idx_ = data.info >> Elf64::R_SYM_SHIFT;
+        rel_type_ = data.info & Elf64::R_TYPE_MASK;
+    }
 }
 
 //////////////////////////////////////////////////////////////////

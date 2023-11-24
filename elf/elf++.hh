@@ -220,17 +220,23 @@ private:
 */
 class rel {
 	Elf_Rel<> data;
+    unsigned sym_idx_;
+    unsigned rel_type_;
 
 public:
-	rel(void *d);
+	rel(void *d, const elf& f);
 
 	unsigned sym_idx() const {
-		return data.info >> data.R_SYM_SHIFT();
+        return sym_idx_;
 	}
 
 	unsigned rel_type() const {
-		return data.info & data.R_TYPE_MASK();
+        return rel_type_;
 	}
+
+    unsigned offset() const {
+        return data.offset;
+    }
 
 	size_t size() const {
 		return sizeof(data.info) + sizeof(data.offset);
@@ -246,17 +252,23 @@ public:
  */
 class rela {
 	Elf_Rela<> data;
+    unsigned sym_idx_;
+    unsigned rel_type_;
 
 public:
-	rela(void *d);
+	rela(void *d, const elf& f);
 
-	unsigned sym_idx() const {
-		return data.info >> data.R_SYM_SHIFT();
-	}
+    unsigned sym_idx() const {
+        return sym_idx_;
+    }
 
-	unsigned rel_type() const {
-		return data.info & data.R_TYPE_MASK();
-	}
+    unsigned rel_type() const {
+        return rel_type_;
+    }
+
+    unsigned offset() const {
+        return data.offset;
+    }
 
 	size_t size() const {
 		return sizeof(data.info) + sizeof(data.offset) +
