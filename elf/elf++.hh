@@ -234,10 +234,6 @@ public:
         return rel_type_;
 	}
 
-    unsigned offset() const {
-        return data.offset;
-    }
-
 	size_t size() const {
 		return sizeof(data.info) + sizeof(data.offset);
 	}
@@ -264,10 +260,6 @@ public:
 
     unsigned rel_type() const {
         return rel_type_;
-    }
-
-    unsigned offset() const {
-        return data.offset;
     }
 
 	size_t size() const {

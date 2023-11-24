@@ -77,7 +77,7 @@ int main(int argc, char **argv)
                 elf::sym sym = symtab.get_sym(rel.sym_idx());
 
                 printf("%6u) %10x %10x %10u %10u %s\n",
-                    i++, rel.offset(), (uint32_t)rel.get_data().info, rel.rel_type(), rel.sym_idx(), sym.get_name().c_str());
+                    i++, (uint32_t)rel.get_data().offset, (uint32_t)rel.get_data().info, rel.rel_type(), rel.sym_idx(), sym.get_name().c_str());
             }
         }
         return 0;

@@ -426,7 +426,7 @@ rela::rela(void *d, const elf& f) :
 
     if (f.get_hdr().ei_class == elfclass::_32)
     {
-        sym_idx_ = data.info >> Elf32::R_SYM_SHIFT;
+        sym_idx_ = (unsigned)(data.info >> Elf32::R_SYM_SHIFT);
         rel_type_ = data.info & Elf32::R_TYPE_MASK;
     }
     else
@@ -447,7 +447,7 @@ rel::rel(void *d, const elf& f) :
 
     if (f.get_hdr().ei_class == elfclass::_32)
     {
-        sym_idx_ = data.info >> Elf32::R_SYM_SHIFT;
+        sym_idx_ = (unsigned)(data.info >> Elf32::R_SYM_SHIFT);
         rel_type_ = data.info & Elf32::R_TYPE_MASK;
     }
     else

@@ -92,6 +92,9 @@ swizzle(T v, byte_order from, byte_order to)
                 return (T)bswap32_internal((std::uint32_t)v);
         case 8:
                 return (T)bswap64_internal((std::uint64_t)v);
+        default:
+            // just to suppress VS warning
+            return T();
         }
 }
 
