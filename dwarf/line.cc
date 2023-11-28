@@ -229,7 +229,7 @@ line_table::impl::read_file_entry(cursor *cur, bool in_header)
                 file_names.emplace_back(move(file_name), mtime, length);
         else if (dir_index < include_directories.size())
                 file_names.emplace_back(
-                        include_directories[dir_index] + file_name,
+                        include_directories[(size_t)dir_index] + file_name,
                         mtime, length);
         else
                 throw format_error("file name directory index out of range: " +
@@ -345,8 +345,10 @@ line_table::iterator::step(cursor *cur)
                 // opcodes even if they're from a later version of the
                 // standard than the line table header claims.
                 uint64_t uarg;
+#ifdef __GNUC__
 #pragma GCC diagnostic push
 #pragma GCC diagnostic warning "-Wswitch-enum"
+#endif
                 switch ((DW_LNS)opcode) {
                 case DW_LNS::copy:
                         entry = regs;
@@ -365,13 +367,13 @@ line_table::iterator::step(cursor *cur)
                                 % m->maximum_operations_per_instruction;
                         break;
                 case DW_LNS::advance_line:
-                        regs.line = (signed)regs.line + cur->sleb128();
+                        regs.line = (unsigned int)((signed)regs.line + cur->sleb128());
                         break;
                 case DW_LNS::set_file:
-                        regs.file_index = cur->uleb128();
+                        regs.file_index = (unsigned int)cur->uleb128();
                         break;
                 case DW_LNS::set_column:
-                        regs.column = cur->uleb128();
+                        regs.column = (unsigned int)cur->uleb128();
                         break;
                 case DW_LNS::negate_stmt:
                         regs.is_stmt = !regs.is_stmt;
@@ -393,7 +395,7 @@ line_table::iterator::step(cursor *cur)
                         regs.epilogue_begin = true;
                         break;
                 case DW_LNS::set_isa:
-                        regs.isa = cur->uleb128();
+                        regs.isa = (unsigned int)cur->uleb128();
                         break;
                 default:
                         // XXX Vendor extensions
@@ -422,7 +424,7 @@ line_table::iterator::step(cursor *cur)
                         break;
                 case DW_LNE::set_discriminator:
                         // XXX Only DWARF4
-                        regs.discriminator = cur->uleb128();
+                        regs.discriminator = (unsigned int)cur->uleb128();
                         break;
                 default: {
                         if(DW_LNE::lo_user <= (DW_LNE)opcode && (DW_LNE)opcode <= DW_LNE::hi_user) {
@@ -437,7 +439,9 @@ line_table::iterator::step(cursor *cur)
                                            to_string((DW_LNE)opcode));
                 }
                 }
+#ifdef __GNUC__
 #pragma GCC diagnostic pop
+#endif
                 if (cur->get_section_offset() > end)
                         throw format_error("extended line number opcode exceeded its size");
                 cur += end - cur->get_section_offset();

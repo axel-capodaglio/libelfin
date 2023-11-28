@@ -28,7 +28,7 @@ rangelist::rangelist(const initializer_list<pair<taddr, taddr> > &ranges)
         sec = make_shared<section>(
                 section_type::ranges, (const char*)synthetic.data(),
                 synthetic.size() * sizeof(taddr),
-                native_order(), format::unknown, sizeof(taddr));
+                native_order(), format::unknown, (unsigned int)sizeof(taddr));
 
         base_addr = 0;
 }
@@ -69,7 +69,7 @@ rangelist::iterator::operator++()
         // DWARF4 section 2.17.3
         taddr largest_offset = ~(taddr)0;
         if (sec->addr_size < sizeof(taddr))
-                largest_offset += 1 << (8 * sec->addr_size);
+                largest_offset += (uint64_t)1 << (8 * sec->addr_size);
 
         // Read in entries until we reach a regular entry of an
         // end-of-list.  Note that pos points to the beginning of the

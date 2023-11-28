@@ -52,7 +52,7 @@ value::as_block(size_t *size_out) const
                 break;
         case DW_FORM::block:
         case DW_FORM::exprloc:
-                *size_out = cur.uleb128();
+                *size_out = (size_t)cur.uleb128();
                 break;
         default:
                 throw value_type_mismatch("cannot read " + to_string(typ) + " as block");
@@ -110,7 +110,7 @@ value::as_exprloc() const
         switch (form) {
         case DW_FORM::exprloc:
         case DW_FORM::block:
-                size = cur.uleb128();
+                size = (size_t)cur.uleb128();
                 break;
         case DW_FORM::block1:
                 size = cur.fixed<uint8_t>();
@@ -202,7 +202,7 @@ value::as_reference() const
                 uint64_t sig = cur.fixed<uint64_t>();
                 try {
                         return cu->get_dwarf().get_type_unit(sig).type();
-                } catch (std::out_of_range &e) {
+                } catch (std::out_of_range & /*e*/) {
                         throw format_error("unknown type signature 0x" + to_hex(sig));
                 }
         }

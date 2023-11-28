@@ -95,7 +95,7 @@ elf::elf(const std::shared_ptr<loader> &l)
                 throw format_error("bad section name string table index");
 
         // Load segments
-        const void *seg_data = l->load(m->hdr.phoff,
+        const void *seg_data = l->load((off_t)m->hdr.phoff,
                                        m->hdr.phentsize * m->hdr.phnum);
         for (unsigned i = 0; i < m->hdr.phnum; i++) {
                 const void *seg = ((const char*)seg_data) + i * m->hdr.phentsize;
@@ -103,7 +103,7 @@ elf::elf(const std::shared_ptr<loader> &l)
         }
 
         // Load sections
-        const void *sec_data = l->load(m->hdr.shoff,
+        const void *sec_data = l->load((off_t)m->hdr.shoff,
                                        m->hdr.shentsize * m->hdr.shnum);
         for (unsigned i = 0; i < m->hdr.shnum; i++) {
                 const void *sec = ((const char*)sec_data) + i * m->hdr.shentsize;
@@ -197,19 +197,19 @@ segment::get_hdr() const {
 const void *
 segment::data() const {
         if (!m->data)
-                m->data = m->f.get_loader()->load(m->hdr.offset,
-                                                  m->hdr.filesz);
+                m->data = m->f.get_loader()->load((off_t)m->hdr.offset,
+                                                  (size_t)m->hdr.filesz);
         return m->data;
 }
 
 size_t
 segment::file_size() const {
-        return m->hdr.filesz;
+        return (size_t)m->hdr.filesz;
 }
 
 size_t
 segment::mem_size() const {
-        return m->hdr.memsz;
+        return (size_t)m->hdr.memsz;
 }
 
 //////////////////////////////////////////////////////////////////
@@ -276,14 +276,14 @@ section::data() const
         if (m->hdr.type == sht::nobits)
                 return nullptr;
         if (!m->data)
-                m->data = m->f.get_loader()->load(m->hdr.offset, m->hdr.size);
+                m->data = m->f.get_loader()->load((off_t)m->hdr.offset, (size_t)m->hdr.size);
         return m->data;
 }
 
 size_t
 section::size() const
 {
-        return m->hdr.size;
+        return (size_t)m->hdr.size;
 }
 
 strtab

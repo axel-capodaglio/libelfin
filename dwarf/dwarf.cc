@@ -212,7 +212,7 @@ unit::get_abbrev(abbrev_code acode) const
         if (!m->abbrevs_vec.empty()) {
                 if (acode >= m->abbrevs_vec.size())
                         goto unknown;
-                const abbrev_entry &entry = m->abbrevs_vec[acode];
+                const abbrev_entry &entry = m->abbrevs_vec[(size_t)acode];
                 if (entry.code == 0)
                         goto unknown;
                 return entry;
@@ -252,9 +252,9 @@ unit::impl::force_abbrevs()
         // rough estimate of "enough".
         if (highest * 10 < abbrevs_map.size() * 15) {
                 // Move the map into the vector
-                abbrevs_vec.resize(highest + 1);
+                abbrevs_vec.resize((size_t)highest + 1);
                 for (auto &entry : abbrevs_map)
-                        abbrevs_vec[entry.first] = move(entry.second);
+                        abbrevs_vec[(size_t)entry.first] = move(entry.second);
                 abbrevs_map.clear();
         }
 
@@ -295,7 +295,7 @@ compilation_unit::get_line_table() const
                 shared_ptr<section> sec;
                 try {
                         sec = m->file.get_section(section_type::line);
-                } catch (format_error &e) {
+                } catch (format_error & /*e*/) {
                         goto done;
                 }
 

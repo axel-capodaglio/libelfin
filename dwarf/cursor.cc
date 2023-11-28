@@ -23,7 +23,7 @@ cursor::sleb128()
                 shift += 7;
                 if ((byte & 0x80) == 0) {
                         if (shift < sizeof(result)*8 && (byte & 0x40))
-                                result |= -((uint64_t)1 << shift);
+                                result |= -((int64_t)1 << shift);
                         return result;
                 }
         }

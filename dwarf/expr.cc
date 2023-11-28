@@ -84,8 +84,10 @@ expr::evaluate(expr_context *ctx, const std::initializer_list<taddr> &arguments)
 
                 // Tell GCC to warn us about missing switch cases,
                 // even though we have a default case.
+#ifdef __GNUC__
 #pragma GCC diagnostic push
 #pragma GCC diagnostic warning "-Wswitch-enum"
+#endif
                 DW_OP op = (DW_OP)cur.fixed<ubyte>();
                 switch (op) {
                 case DW_OP::addr:
@@ -129,7 +131,7 @@ expr::evaluate(expr_context *ctx, const std::initializer_list<taddr> &arguments)
                 case DW_OP::bregx:
                         tmp1.u = cur.uleb128();
                         tmp2.s = cur.sleb128();
-                        stack.push_back((int64_t)ctx->reg(tmp1.u) + tmp2.s);
+                        stack.push_back((int64_t)ctx->reg((unsigned int)tmp1.u) + tmp2.s);
                         break;
 
                         // 2.5.1.3 Stack operations
@@ -144,7 +146,7 @@ expr::evaluate(expr_context *ctx, const std::initializer_list<taddr> &arguments)
                 case DW_OP::pick:
                         tmp1.u = cur.fixed<uint8_t>();
                         CHECKN(tmp1.u);
-                        stack.push_back(stack.revat(tmp1.u));
+                        stack.push_back(stack.revat((size_t)tmp1.u));
                         break;
                 case DW_OP::over:
                         CHECKN(2);
@@ -172,7 +174,7 @@ expr::evaluate(expr_context *ctx, const std::initializer_list<taddr> &arguments)
                                 throw expr_error("DW_OP_deref_size operand exceeds address size");
                 deref_common:
                         CHECK();
-                        stack.back() = ctx->deref_size(stack.back(), tmp1.u);
+                        stack.back() = ctx->deref_size(stack.back(), (unsigned int)tmp1.u);
                         break;
                 case DW_OP::xderef:
                         tmp1.u = subsec->addr_size;
@@ -185,7 +187,7 @@ expr::evaluate(expr_context *ctx, const std::initializer_list<taddr> &arguments)
                         CHECKN(2);
                         tmp2.u = stack.back();
                         stack.pop_back();
-                        stack.back() = ctx->xderef_size(tmp2.u, stack.back(), tmp1.u);
+                        stack.back() = ctx->xderef_size(tmp2.u, stack.back(), (unsigned int)tmp1.u);
                         break;
                 case DW_OP::push_object_address:
                         // XXX
@@ -363,7 +365,7 @@ expr::evaluate(expr_context *ctx, const std::initializer_list<taddr> &arguments)
                         // 2.6.1.1.3 Implicit location descriptions
                 case DW_OP::implicit_value:
                         result.location_type = expr_result::type::implicit;
-                        result.implicit_len = cur.uleb128();
+                        result.implicit_len = (size_t)cur.uleb128();
                         cur.ensure(result.implicit_len);
                         result.implicit = cur.pos;
                         break;
@@ -393,13 +395,15 @@ expr::evaluate(expr_context *ctx, const std::initializer_list<taddr> &arguments)
                         } else if (DW_OP::breg0 <= op && op <= DW_OP::breg31) {
                                 tmp1.u = (unsigned)op - (unsigned)DW_OP::breg0;
                                 tmp2.s = cur.sleb128();
-                                stack.push_back((int64_t)ctx->reg(tmp1.u) + tmp2.s);
+                                stack.push_back((int64_t)ctx->reg((unsigned int)tmp1.u) + tmp2.s);
                         }
                         else
                         throw expr_error("bad operation " + to_string(op));
                 }
                 }
+#ifdef __GNUC__
 #pragma GCC diagnostic pop
+#endif
 #undef CHECK
 #undef CHECKN
         }
