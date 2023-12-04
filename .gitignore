@@ -1,2 +1,10 @@
 build*
 .vscode
+.vs
+Debug
+Release
+dwarf\Debug
+elf\Debug
+dwarf\Release
+elf\Release
+.svn
