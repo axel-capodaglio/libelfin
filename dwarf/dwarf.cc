@@ -135,7 +135,7 @@ dwarf::get_section(section_type type) const
  */
 struct unit::impl
 {
-        const dwarf file;
+        const dwarf& file;
         const section_offset offset;
         const std::shared_ptr<section> subsec;
         const section_offset debug_abbrev_offset;
