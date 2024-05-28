@@ -179,7 +179,6 @@ struct cursor
         }
 
         void skip_initial_length();
-        void skip_unit_type();
         void skip_form(DW_FORM form);
 
         cursor &operator+=(section_offset offset)
